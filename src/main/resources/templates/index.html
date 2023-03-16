@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<meta charset="UTF-8" />
+<title>Notes service</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous" />
+<script src='https://www.google.com/recaptcha/api.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/turbolinks/5.2.0/turbolinks.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script defer src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<style>
+    .turbolinks-progress-bar {
+        height: 2px;
+        background-color: navy;
+    }
+</style>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/}">Notes service</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" th:href="@{/register}">Register/Login</a>
+                </li>
+                <li class="nav-item">
+                    <p th:if="${user}" th:text="'Welcome ' + ${user.getUsername()} + '!'" aria-current="page" style="color:whitesmoke;"></p>
+                </li>
+            </ul>
+        </div>
+        <div th:if="${user}">
+            <form action="/logout" method="post">
+                <input type="hidden" name="_csrf" value="{{_csrf.token}}" />
+                <input type="submit" value="Sign Out"/>
+            </form>
+        </div>
+    </div>
+</nav>
+<div>
+    <form action="add" method="post">
+        <input type="text" name="text" placeholder="Enter please note" />
+        <button type="submit">Add note</button>
+    </form>
+</div>
+<div th:switch="${notes}">
+    <h2 th:case="null">No notes yet!</h2>
+    <div th:case="*">
+        <h2>Notes</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Text</th>
+                <th>Likes</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="note : ${notes}">
+                <td th:text="${note.text}"></td>
+                <td>
+                    <a class="col align-self-center" th:href="@{/like/{id}(id=${note.id})}" >
+                        <div th:if="${note.canLike}">
+                            <i th:if="${note.haveLiked}" class="fas fa-heart" ></i>
+                            <i th:unless="${note.haveLiked}" class="far fa-heart" ></i>
+                        </div>
+                    </a>
+                    <b th:text="${note.likes}"></b>
+
+                </td>
+                <td><a th:if="${note.currentUserIsAuthor}" class="btn btn-primary col align-self-center" data-toggle="collapse" th:href="'#'+${note.id}" role="button" aria-expanded="false" aria-controls="collapseExample">
+                        Edit note
+                    </a>
+                    <div th:if="${note.currentUserIsAuthor}" class="collapse"  th:id="${note.id}">>
+                        <div class="form-group mt-3">
+                            <form method="post" action="edit" enctype="multipart/form-data">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="text" placeholder="Enter note" />
+                                </div>
+                                <input type="hidden" name="_csrf" value="${_csrf.token}" />
+                                <input type="hidden" name="id" th:value="${note.id}">
+                                <div class="form-group">
+                                    <button type="submit">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <button th:unless="${note.currentUserIsAuthor}"><i class="fa fa-times"></i>Unavailable</button>
+                </td>
+                <td>
+                    <button th:if="${note.currentUserIsAuthor}"> <a th:href="@{/delete/{id}(id=${note.id})}">Delete</a></button>
+                    <button th:unless="${note.currentUserIsAuthor}"><i class="fa fa-times"></i>Unavailable</button>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</th:block><script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+</body>
+</html>
